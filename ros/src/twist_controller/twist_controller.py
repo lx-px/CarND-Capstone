@@ -12,7 +12,7 @@ class Controller(object):
     def __init__(self, *args, **kwargs):
         # TODO: Implement
         self.throttle_pid = PID(0.5,0.02,0.2)
-        self.filter = LowPassFilter(0.7,0.3)
+        self.filter = LowPassFilter(0.2,0.1)
         self.yaw_control = YawController(kwargs["wheel_base"],
                                          kwargs['steer_ratio'],
                                          kwargs['max_lat_accel'],
@@ -21,6 +21,9 @@ class Controller(object):
         self.accel_limit = kwargs['accel_limit']
         self.decel_limit = kwargs['decel_limit']
         self.vehicle_mass = kwargs['vehicle_mass']
+        self.fuel_capacity = kwargs['fuel_capacity']
+        self.wheel_radius = kwargs['wheel_radius']
+        
         self.time = 0.0
 
     def control(self, linear_exp,angular_exp,linear_curr,dbwenb):#**kwargs):
@@ -40,8 +43,9 @@ class Controller(object):
              
          
          #time diff
-         dt = time.time() - self.time;
-         print(dt)
+         dt = rospy.rostime.get_time() - self.time;
+         self.time = rospy.rostime.get_time()
+         print(dt, rospy.rostime.get_time(), time.time())
  
          # get steer using yaw controller
          steer = self.yaw_control.get_steering(linear_exp, angular_exp, linear_exp)
@@ -49,7 +53,9 @@ class Controller(object):
  
          #get appropriate vel. diff we need to achieve
          vel_diff = linear_exp - linear_curr
+         print(vel_diff, self.decel_limit*dt, self.accel_limit*dt)
          vel_diff = max(self.decel_limit*dt, min(self.accel_limit*dt, vel_diff)) #max. vel achievable using out accel/decl limits
+         print(vel_diff)
  
          #get throttle value using throttle pid controller: 0<val<1
          throttle = self.throttle_pid.step(vel_diff, dt)
@@ -57,7 +63,7 @@ class Controller(object):
  
          #brake
          if vel_diff < 0: #we need to brake
-             brake = self.vehicle_mass*(-vel_diff/dt) #torque in Nm
+             brake = (self.vehicle_mass+(self.fuel_capacity*GAS_DENSITY))*(-vel_diff/dt)*self.wheel_radius #torque in Nm
              throttle = 0.0
          else:
              brake = 0.0

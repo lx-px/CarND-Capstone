@@ -101,7 +101,6 @@ class DBWNode(object):
         self.currvel = msg
 
     def dbwenb_cb(self, msg):
-        rospy.loginfo("dbw msg received")
         self.dbwenb = msg.data
 
     def publish(self, throttle, brake, steer):
