@@ -58,7 +58,7 @@ class Controller(object):
  
          # get steer using yaw controller
          steer = self.yaw_control.get_steering(linear_exp, angular_exp, linear_exp)
-         #steer = self.filter.filt(steer)
+         steer = self.filter.filt(steer)
  
          #get appropriate vel. diff we need to achieve
          vel_diff = linear_exp - linear_curr
