@@ -54,6 +54,9 @@ class DBWNode(object):
                                          BrakeCmd, queue_size=1)
 
         # TODO: Create `Controller` object
+        throttle_pid_init = [0.3, 0.1, 0.0, 0.0, 0.2];
+        lp_coeff = [0.5, 0.02] 
+        min_speed = 0.1
         self.max_vel = 40*0.44
         self.controller = Controller(vehicle_mass = vehicle_mass,
                                     fuel_capacity = fuel_capacity,
@@ -64,8 +67,10 @@ class DBWNode(object):
                                     wheel_base = wheel_base,
                                     steer_ratio = steer_ratio,
                                     max_lat_accel = max_lat_accel,
-                                    max_steer_angle = max_steer_angle)
-                                    #"throttle_pid_init": self.throttle_pid_init})
+                                    max_steer_angle = max_steer_angle,
+                                    throttle_pid_init = throttle_pid_init,
+                                    lp_coeff = lp_coeff,
+                                    min_speed = min_speed)
 
         # TODO: Subscribe to all the topics you need to
         self.twist_sub = rospy.Subscriber('/twist_cmd', TwistStamped, self.twist_cb, queue_size=1)
