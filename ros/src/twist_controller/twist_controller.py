@@ -74,13 +74,15 @@ class Controller(object):
          brake = 0.0
          
          #handle throttle and brake
-         if linear_exp == 0. and linear_curr < 0.1: #we need to do a complete stop
+         if linear_exp == 0.0 and linear_curr < 0.1: #we need to do a complete stop
              brake = 400; 
              throttle = 0.0
-         elif throttle < 0.1 and vel_diff < 0: # we need to start braking slowly
-             decel = max(self.decel_limit, vel_diff/dt)
+             print("complete stop: ", brake)
+         elif throttle < 0.1 and vel_diff < 0.0: # we need to start braking slowly
+             decel = max(self.decel_limit, vel_diff)
              brake = (self.vehicle_mass+(self.fuel_capacity*GAS_DENSITY))*abs(decel)*self.wheel_radius #torque in Nm
              throttle = 0.0
+             print("rolling stop: ", brake)
 
          #print(throttle, brake, steer)
          return throttle, brake, steer
