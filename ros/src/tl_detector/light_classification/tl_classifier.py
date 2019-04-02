@@ -1,9 +1,53 @@
+#from styx_msgs.msg import TrafficLight
+
+import tensorflow as tf
+import numpy as np
+#import matplotlib.pyplot as plt
+#from PIL import Image
+from PIL import ImageDraw
+#from PIL import ImageColor
+#import time
+#from scipy.stats import norm
+#from PIL import ImageColor
+import cv2
 from styx_msgs.msg import TrafficLight
+#import os
 
 class TLClassifier(object):
     def __init__(self):
         #TODO load classifier
-        pass
+        #graph_file = 'ssd_mobilenet_v1_ppn_shared_box_predictor_300x300_coco14_sync_2018_07_03/frozen_inference_graph.pb'
+        #print(os.getcwd())
+        graph_file = 'light_classification/models/frozen_inference_graph.pb'
+        detection_graph = self.load_graph(graph_file)
+        # detection_graph = load_graph(RFCN_GRAPH_FILE)
+        # detection_graph = load_graph(FASTER_RCNN_GRAPH_FILE)
+        
+        # The input placeholder for the image.
+        # `get_tensor_by_name` returns the Tensor with the associated name in the Graph.
+        self.image_tensor = detection_graph.get_tensor_by_name('image_tensor:0')
+        
+        # Each box represents a part of the image where a particular object was detected.
+        self.detection_boxes = detection_graph.get_tensor_by_name('detection_boxes:0')
+        
+        # Each score represent how level of confidence for each of the objects.
+        # Score is shown on the result image, together with the class label.
+        self.detection_scores = detection_graph.get_tensor_by_name('detection_scores:0')
+
+        # The classification of the object (integer id).
+        self.detection_classes = detection_graph.get_tensor_by_name('detection_classes:0')
+        
+        self.sess = tf.Session(graph=detection_graph)
+        
+        
+        ## Colors (one for each class)
+        #cmap = ImageColor.colormap
+        #print("Number of colors =", len(cmap))
+        #self.COLOR_LIST = sorted([c for c in cmap.keys()])
+        
+        self.targetclass = 10
+
+
 
     def get_classification(self, image):
         """Determines the color of the traffic light in the image
@@ -16,4 +60,121 @@ class TLClassifier(object):
 
         """
         #TODO implement light color prediction
-        return TrafficLight.UNKNOWN
+
+        #resize
+        #image = cv2.resize(image, (300,300))   
+        image_np = np.expand_dims(np.asarray(image, dtype=np.uint8), 0)
+
+        
+        # Actual detection.
+        (boxes, scores, classes) = self.sess.run([self.detection_boxes, self.detection_scores, self.detection_classes], 
+                                            feed_dict={self.image_tensor: image_np})
+    
+        # Remove unnecessary dimensions
+        boxes = np.squeeze(boxes)
+        scores = np.squeeze(scores)
+        classes = np.squeeze(classes)
+        #print(boxes,scores,classes)
+        confidence_cutoff = 0.09
+        # Filter boxes with a confidence score less than `confidence_cutoff`
+        boxes, scores, classes = self.filter_boxes(confidence_cutoff, boxes, scores, classes)
+        #print(boxes,scores,classes)
+    
+        # The current box coordinates are normalized to a range between 0 and 1.
+        # This converts the coordinates actual location on the image.
+        height, width = image.shape[0], image.shape[1]
+        box_coords = self.to_image_coords(boxes, height, width)
+        #print(box_coords[])
+    
+        # Each class with be represented by a differently colored box
+        #self.draw_boxes(image, box_coords, classes)
+    
+        #plt.figure(figsize=(12, 8))
+        #plt.imshow(image)
+        #image.save('img_out0.png')
+        #print(box_coords[0][0],box_coords[0][2],box_coords[0][1],box_coords[0][3])
+        #classify the detected area
+        trafficlight = None
+        for i in range(len(box_coords)):
+            area = (boxes[i][0] - boxes[i][2])*(boxes[i][1] - boxes[i][3])
+            if area < 0.0001:
+                continue
+            else:
+                #get image area
+                #print(box_coords[i][0],box_coords[i][2],box_coords[i][1],box_coords[i][3])
+                trafficlight = image[box_coords[i][0]:box_coords[i][2],box_coords[i][1]:box_coords[i][3]]
+                if trafficlight.size < 400:
+                    continue
+                else:
+                    #cv2.imwrite('light_out0.png', trafficlight)
+                    break
+            
+            
+        #classify the area as red, yellow or green
+        #trafficlight_area_hsv = cv2.cvtColor(trafficlight_area, cv2.COLOR_BGR2HSV)
+        if trafficlight is not None:
+            brightness = cv2.cvtColor(trafficlight, cv2.COLOR_BGR2HSV)[:,:,-1] 
+            hs, ws = np.where(brightness >= (brightness.max()-30))
+            hs_mean = hs.mean()
+            #print(hs_mean)
+            tl_h = trafficlight.shape[0]
+            if hs_mean / tl_h < 0.4:
+                return TrafficLight.RED
+            elif hs_mean / tl_h >= 0.55:
+                return TrafficLight.GREEN
+            else:
+                return TrafficLight.YELLOW 
+        else:
+            return TrafficLight.UNKNOWN                 
+            
+        #return #TrafficLight.UNKNOWN
+    
+    def filter_boxes(self, min_score, boxes, scores, classes):
+        """Return boxes with a confidence >= `min_score`"""
+        n = len(classes)
+        idxs = []
+        for i in range(n):
+            if (classes[i] == self.targetclass) and (scores[i] >= min_score):
+                idxs.append(i)
+        
+        filtered_boxes = boxes[idxs, ...]
+        filtered_scores = scores[idxs, ...]
+        filtered_classes = classes[idxs, ...]
+        
+        sortedind = np.argsort(filtered_scores)
+        return filtered_boxes[sortedind], filtered_scores[sortedind], filtered_classes[sortedind]
+    
+    def to_image_coords(self, boxes, height, width):
+        """
+        The original box coordinate output is normalized, i.e [0, 1].
+        
+        This converts it back to the original coordinate based on the image
+        size.
+        """
+        box_coords = np.zeros_like(boxes)
+        box_coords[:, 0] = boxes[:, 0] * height
+        box_coords[:, 1] = boxes[:, 1] * width
+        box_coords[:, 2] = boxes[:, 2] * height
+        box_coords[:, 3] = boxes[:, 3] * width
+        
+        return box_coords
+    
+    def draw_boxes(self, image, boxes, classes, thickness=4):
+        """Draw bounding boxes on the image"""
+        draw = ImageDraw.Draw(image)
+        for i in range(len(boxes)):
+            bot, left, top, right = boxes[i, ...]
+            class_id = int(classes[i])
+            color = self.COLOR_LIST[class_id]
+            draw.line([(left, top), (left, bot), (right, bot), (right, top), (left, top)], width=thickness, fill=color)
+            
+    def load_graph(self, graph_file):
+        """Loads a frozen inference graph"""
+        graph = tf.Graph()
+        with graph.as_default():
+            od_graph_def = tf.GraphDef()
+            with tf.gfile.GFile(graph_file, 'rb') as fid:
+                serialized_graph = fid.read()
+                od_graph_def.ParseFromString(serialized_graph)
+                tf.import_graph_def(od_graph_def, name='')
+        return graph
