@@ -63,7 +63,7 @@ class Controller(object):
          #get appropriate vel. diff we need to achieve
          vel_diff = linear_exp - linear_curr
          #print(vel_diff, self.decel_limit*dt, self.accel_limit*dt)
-         vel_diff = max(self.decel_limit*dt, min(self.accel_limit*dt, vel_diff)) #max. vel achievable using out accel/decl limits
+         #vel_diff = max(self.decel_limit*dt, min(self.accel_limit*dt, vel_diff)) #max. vel achievable using out accel/decl limits
          #print(vel_diff)
  
          #get throttle value using throttle pid controller: 0<val<1
@@ -74,7 +74,7 @@ class Controller(object):
          brake = 0.0
          
          #handle throttle and brake
-         if linear_exp == 0.0 and linear_curr < 0.1: #we need to do a complete stop
+         if linear_exp == 0.0:# and linear_curr < 0.1: #we need to do a complete stop
              brake = 400; 
              throttle = 0.0
              print("complete stop: ", brake)
