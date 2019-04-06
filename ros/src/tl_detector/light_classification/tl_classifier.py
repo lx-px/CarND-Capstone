@@ -102,7 +102,7 @@ class TLClassifier(object):
             else:
                 #get image area
                 #print(box_coords[i][0],box_coords[i][2],box_coords[i][1],box_coords[i][3])
-                trafficlight = image[box_coords[i][0]:box_coords[i][2],box_coords[i][1]:box_coords[i][3]]
+                trafficlight = image[box_coords[i][2]:box_coords[i][0],box_coords[i][3]:box_coords[i][1]]
                 if trafficlight.size < 400:
                     continue
                 else:

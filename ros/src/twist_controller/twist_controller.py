@@ -23,9 +23,11 @@ class Controller(object):
         self.fuel_capacity = kwargs['fuel_capacity']
         self.wheel_radius = kwargs['wheel_radius']
         self.throttle_pid_init = kwargs['throttle_pid_init']
-        self.lp_coeff = kwargs['lp_coeff']
+        self.vel_lp_coeff = kwargs['vel_lp_coeff']
+        self.steer_lp_coeff = kwargs['steer_lp_coeff']
         self.throttle_pid = PID(*self.throttle_pid_init)
-        self.filter = LowPassFilter(*self.lp_coeff)
+        self.vel_filter = LowPassFilter(*self.vel_lp_coeff)
+        self.steer_filter = LowPassFilter(*self.steer_lp_coeff)
         
         self.time = rospy.get_time()
 
@@ -54,11 +56,11 @@ class Controller(object):
          #print(dt, rospy.rostime.get_time(), time.time())
  
          #smooth the noisy currrent velocity values
-         linear_curr = self.filter.filt(linear_curr) 
+         linear_curr = self.vel_filter.filt(linear_curr) 
  
          # get steer using yaw controller
          steer = self.yaw_control.get_steering(linear_exp, angular_exp, linear_exp)
-         #steer = self.filter.filt(steer)
+         steer = self.steer_filter.filt(steer)
  
          #get appropriate vel. diff we need to achieve
          vel_diff = linear_exp - linear_curr
@@ -74,7 +76,7 @@ class Controller(object):
          brake = 0.0
          
          #handle throttle and brake
-         if linear_exp == 0.0:# and linear_curr < 0.1: #we need to do a complete stop
+         if linear_exp == 0.0 and linear_curr < 0.1: #we need to do a complete stop
              brake = 400; 
              throttle = 0.0
              print("complete stop: ", brake)

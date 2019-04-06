@@ -22,7 +22,7 @@ as well as to verify your TL classifier.
 TODO (for Yousuf and Aaron): Stopline location for each traffic light.
 '''
 
-LOOKAHEAD_WPS = 50  # Number of waypoints we will publish. You can change this number
+LOOKAHEAD_WPS = 50#200  # Number of waypoints we will publish. You can change this number
 
 
 class WaypointUpdater(object):
@@ -85,29 +85,32 @@ class WaypointUpdater(object):
         lane.header = self.base_waypoints.header
         end_idx = closest_idx + LOOKAHEAD_WPS
         base_waypoints = self.base_waypoints.waypoints[closest_idx:end_idx]
+        if end_idx > len(self.base_waypoints.waypoints):
+            print('done with all base waypoints')
         
         #lane.waypoints = base_waypoints
-        
+        #print(self.stop_wp_idx, end_idx)
         if self.stop_wp_idx == -1 or self.stop_wp_idx > end_idx:
             #print(self.stop_wp_idx, end_idx)
             lane.waypoints = base_waypoints
         else:
-            print("here")
+            #print("here")
             lane.waypoints = self.decelerate_waypoints(base_waypoints, closest_idx)
         return lane
         
     def decelerate_waypoints(self, waypoints_front, closest_idx):
         temp = []
-        #print(len(waypoints_front))
+        
         
         stop_idx = max(self.stop_wp_idx - closest_idx -2, 0)
+        print(len(waypoints_front), stop_idx)
         for i, wp in enumerate(waypoints_front):
             p = Waypoint()
             p.pose = wp.pose
             d = self.distance(waypoints_front, i, stop_idx)
-            vel = math.sqrt(2*-self.decel_limit*d)
-            print(wp.twist.twist.linear.x, vel)
-            if vel < 1.0:
+            vel = 0.4*d#math.sqrt(2*-self.decel_limit*d)
+            #print(2*-self.decel_limit*d, vel)
+            if vel < 2.0:
                 vel = 0.0
             p.twist.twist.linear.x = min(vel, wp.twist.twist.linear.x)
             temp.append(p)

@@ -44,7 +44,7 @@ class TLDetector(object):
         self.upcoming_red_light_pub = rospy.Publisher('/traffic_waypoint', Int32, queue_size=1)
 
         self.bridge = CvBridge()
-        #self.light_classifier = TLClassifier()
+        self.light_classifier = TLClassifier()
         self.listener = tf.TransformListener()
 
         self.state = TrafficLight.UNKNOWN
@@ -66,7 +66,7 @@ class TLDetector(object):
 
     def waypoints_cb(self, waypoints):
         self.waypoints = waypoints
-        print(self.waypoints_2d)
+        #print(self.waypoints_2d)
         if self.waypoints_2d == None:
             self.waypoints_2d = [[waypoint.pose.pose.position.x, waypoint.pose.pose.position.y] for waypoint in
                                  waypoints.waypoints]
@@ -93,7 +93,7 @@ class TLDetector(object):
         #self.count += 1
 
         light_wp, state = self.process_traffic_lights()
-        #print(light_wp, state)
+        print(light_wp, state)
         #str = "lightinfo: %d"%state
         #rospy.loginfo(str)
         '''
@@ -155,18 +155,18 @@ class TLDetector(object):
 
         """
 
-        #if(not self.has_image):
-        #    self.prev_light_loc = None
-        #    return False
+        if(not self.has_image):
+            self.prev_light_loc = None
+            return False
 
-        #cv_image = self.bridge.imgmsg_to_cv2(self.camera_image, "bgr8")
+        cv_image = self.bridge.imgmsg_to_cv2(self.camera_image, "bgr8")
 
         #Get classification
-        #light_det = self.light_classifier.get_classification(cv_image)
+        light_det = self.light_classifier.get_classification(cv_image)
         #light_det = 0
         #print(light.state, light_det)
 
-        return light.state
+        return light_det#light.state
 
 
     def process_traffic_lights(self):

@@ -55,7 +55,8 @@ class DBWNode(object):
 
         # TODO: Create `Controller` object
         throttle_pid_init = [0.3, 0.1, 0.0, 0.0, 0.2];
-        lp_coeff = [0.5, 0.02] 
+        vel_lp_coeff = [0.5, 0.02] 
+        steer_lp_coeff = [0.5, 0.02]
         min_speed = 0.1
         self.max_vel = 40*0.44
         self.controller = Controller(vehicle_mass = vehicle_mass,
@@ -69,8 +70,9 @@ class DBWNode(object):
                                     max_lat_accel = max_lat_accel,
                                     max_steer_angle = max_steer_angle,
                                     throttle_pid_init = throttle_pid_init,
-                                    lp_coeff = lp_coeff,
-                                    min_speed = min_speed)
+                                    vel_lp_coeff = vel_lp_coeff,
+                                    min_speed = min_speed,
+                                    steer_lp_coeff = steer_lp_coeff)
 
         # TODO: Subscribe to all the topics you need to
         self.twist_sub = rospy.Subscriber('/twist_cmd', TwistStamped, self.twist_cb, queue_size=1)
