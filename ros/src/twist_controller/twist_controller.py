@@ -29,6 +29,12 @@ class Controller(object):
         self.vel_filter = LowPassFilter(*self.vel_lp_coeff)
         self.steer_filter = LowPassFilter(*self.steer_lp_coeff)
         
+        #kp_cte = 0.5
+        #ki_cte = 0.0
+        #kd_cte = 0.2
+        #self.cte_controller = PID(
+        #    kp_cte, ki_cte, kd_cte, -self.max_steer_angle, self.max_steer_angle)
+        
         self.time = rospy.get_time()
 
     def control(self, linear_exp,angular_exp,linear_curr,dbwenb):#**kwargs):
@@ -39,6 +45,7 @@ class Controller(object):
          
          if dbwenb == False:
              self.throttle_pid.reset()
+             #self.cte_controller.reset()
              return 0.,0.,0.
              
          if self.time == 0.0:
@@ -59,7 +66,7 @@ class Controller(object):
          linear_curr = self.vel_filter.filt(linear_curr) 
  
          # get steer using yaw controller
-         steer = self.yaw_control.get_steering(linear_exp, angular_exp, linear_exp)
+         steer = self.yaw_control.get_steering(linear_exp, angular_exp, linear_exp) #+ self.cte_controller.step(cte, sample_time)
          steer = self.steer_filter.filt(steer)
  
          #get appropriate vel. diff we need to achieve
@@ -79,12 +86,12 @@ class Controller(object):
          if linear_exp == 0.0 and linear_curr < 0.1: #we need to do a complete stop
              brake = 400; 
              throttle = 0.0
-             print("complete stop: ", brake)
+             #print("complete stop: ", brake)
          elif throttle < 0.1 and vel_diff < 0.0: # we need to start braking slowly
              decel = max(self.decel_limit, vel_diff)
              brake = (self.vehicle_mass+(self.fuel_capacity*GAS_DENSITY))*abs(decel)*self.wheel_radius #torque in Nm
              throttle = 0.0
-             print("rolling stop: ", brake)
+             #print("rolling stop: ", brake)
 
          #print(throttle, brake, steer)
          return throttle, brake, steer

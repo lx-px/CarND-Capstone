@@ -14,7 +14,7 @@ from scipy.spatial import KDTree
 import numpy as np
 #import os
 
-STATE_COUNT_THRESHOLD = 3
+STATE_COUNT_THRESHOLD = 2
 
 class TLDetector(object):
     def __init__(self):
@@ -24,6 +24,15 @@ class TLDetector(object):
         self.waypoints = None
         self.camera_image = None
         self.lights = []
+        #TODO:
+
+        self.waypoints_2d = None
+        self.waypoint_tree = None
+        self.count = 0
+        
+        self.imCount = 0 #holds the current image count
+        self.imCountDrop=3 #holds the total images to drop
+
 
         sub1 = rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
         sub2 = rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
@@ -44,7 +53,7 @@ class TLDetector(object):
         self.upcoming_red_light_pub = rospy.Publisher('/traffic_waypoint', Int32, queue_size=1)
 
         self.bridge = CvBridge()
-        self.light_classifier = TLClassifier()
+        self.light_classifier = TLClassifier(True)
         self.listener = tf.TransformListener()
 
         self.state = TrafficLight.UNKNOWN
@@ -52,12 +61,7 @@ class TLDetector(object):
         self.last_wp = -1
         self.state_count = 0
 
-        #TODO:
-
-        self.waypoints_2d = None
-        self.waypoint_tree = None
-        self.count = 0
-
+        
         rospy.spin()
 
 
@@ -84,6 +88,10 @@ class TLDetector(object):
             msg (Image): image from car-mounted camera
 
         """
+        self.imCount += 1
+        if self.imCount != self.imCountDrop:
+            return
+        self.imCount = 0
         self.has_image = True
         self.camera_image = msg
         #print(len(msg.data), msg.height, msg.width, msg.)
@@ -93,7 +101,7 @@ class TLDetector(object):
         #self.count += 1
 
         light_wp, state = self.process_traffic_lights()
-        print(light_wp, state)
+        #print(light_wp, state)
         #str = "lightinfo: %d"%state
         #rospy.loginfo(str)
         '''
@@ -110,6 +118,7 @@ class TLDetector(object):
             light_wp = light_wp if state == TrafficLight.RED else -1
             self.last_wp = light_wp
             self.upcoming_red_light_pub.publish(Int32(light_wp))
+            
         else:
             self.upcoming_red_light_pub.publish(Int32(self.last_wp))
         self.state_count += 1
@@ -154,7 +163,7 @@ class TLDetector(object):
             int: ID of traffic light color (specified in styx_msgs/TrafficLight)
 
         """
-
+        #return light.state
         if(not self.has_image):
             self.prev_light_loc = None
             return False
@@ -196,7 +205,7 @@ class TLDetector(object):
 
                 #check if its closest wp
                 d = temp_wp_idx - car_position
-                if d >= 0 and d < max_d:
+                if d >= 0 and d < 200:
                     max_d = d
                     closest_light = light
                     line_wp_index = temp_wp_idx
@@ -205,7 +214,7 @@ class TLDetector(object):
             state = self.get_light_state(closest_light)
             return line_wp_index, state
 
-        return -1, TrafficLight.UNKOWN
+        return -1, TrafficLight.UNKNOWN
 
 
 
