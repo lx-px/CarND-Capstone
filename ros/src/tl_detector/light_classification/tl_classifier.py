@@ -9,7 +9,7 @@ class TLClassifier(object):
         if is_sim:
             PATH_TO_GRAPH = r'light_classification/models/frozen_inference_graph_sim_17668.pb'
         else:
-            PATH_TO_GRAPH = r'light_classification/model/ssd_udacity/frozen_inference_graph.pb'
+            PATH_TO_GRAPH = r'light_classification/models/frozen_inference_graph_real_17668.pb'
 
         self.graph = tf.Graph()
         self.threshold = .5
