@@ -23,7 +23,7 @@ TODO (for Yousuf and Aaron): Stopline location for each traffic light.
 '''
 
 LOOKAHEAD_WPS = 20#200  # Number of waypoints we will publish. You can change this number
-RATE = 10
+RATE = 50
 
 
 class WaypointUpdater(object):
@@ -74,7 +74,7 @@ class WaypointUpdater(object):
         val = np.dot(cl_vect - prev_vect, curr_vect - cl_vect)
         if val > 0:
             return (closest_idx + 1) % len(self.waypoints_2d)
-        return closest_idx
+        return closest_idx + 1
 
     def publish_waypoints(self, closest_idx):
         #generate required waypoints and publish        
@@ -90,12 +90,13 @@ class WaypointUpdater(object):
             print('done with all base waypoints')
         
         #lane.waypoints = base_waypoints
+        #return lane
         #print(self.stop_wp_idx, end_idx)
         if self.stop_wp_idx == -1 or self.stop_wp_idx > end_idx:
             #print(self.stop_wp_idx, end_idx)
             lane.waypoints = base_waypoints
         else:
-            #print("decelerating...")
+            print("decelerating...")
             lane.waypoints = self.decelerate_waypoints(base_waypoints, closest_idx)
         return lane
         
@@ -115,6 +116,8 @@ class WaypointUpdater(object):
                 vel = 0.0
             p.twist.twist.linear.x = min(vel, wp.twist.twist.linear.x)
             temp.append(p)
+            if i < stop_idx:
+                break
         return temp
 
     def pose_cb(self, msg):

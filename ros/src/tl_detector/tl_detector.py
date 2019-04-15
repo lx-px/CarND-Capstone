@@ -78,7 +78,8 @@ class TLDetector(object):
 
 
     def traffic_cb(self, msg):
-        self.lights = msg.lights
+        if self.lights == []:
+            self.lights = msg.lights
 
     def image_cb(self, msg):
         """Identifies red lights in the incoming camera image and publishes the index
@@ -88,6 +89,8 @@ class TLDetector(object):
             msg (Image): image from car-mounted camera
 
         """
+        #return
+        
         self.imCount += 1
         if self.imCount != self.imCountDrop:
             return
@@ -137,9 +140,8 @@ class TLDetector(object):
         closest_idx = -1
         if self.waypoint_tree:
             closest_idx = self.waypoint_tree.query([x, y], 1)[1]
-        else:
-            return closest_idx
-
+        return closest_idx
+        
         closest_coord = self.waypoints_2d[closest_idx]
         prev_coord = self.waypoints_2d[closest_idx - 1]
 
@@ -197,7 +199,7 @@ class TLDetector(object):
             car_position = self.get_closest_waypoint(self.pose.pose.position.x, self.pose.pose.position.y)
 
             #TODO find the closest visible traffic light (if one exists)
-            max_d = len(self.waypoints.waypoints)
+            max_d = 20#len(self.waypoints.waypoints)
             for i, light in enumerate(self.lights):
                 # get stop line coords.
                 line = stop_line_positions[i]
@@ -205,10 +207,11 @@ class TLDetector(object):
 
                 #check if its closest wp
                 d = temp_wp_idx - car_position
-                if d >= 0 and d < 200:
+                if d >= 0 and d < max_d:
                     max_d = d
                     closest_light = light
                     line_wp_index = temp_wp_idx
+                    break
 
         if closest_light is not None:
             state = self.get_light_state(closest_light)

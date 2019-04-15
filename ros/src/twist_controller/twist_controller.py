@@ -66,7 +66,7 @@ class Controller(object):
          linear_curr = self.vel_filter.filt(linear_curr) 
  
          # get steer using yaw controller
-         steer = self.yaw_control.get_steering(linear_exp, angular_exp, linear_exp) #+ self.cte_controller.step(cte, sample_time)
+         steer = self.yaw_control.get_steering(linear_exp, angular_exp, linear_curr) #+ self.cte_controller.step(cte, sample_time)
          steer = self.steer_filter.filt(steer)
  
          #get appropriate vel. diff we need to achieve
@@ -84,12 +84,12 @@ class Controller(object):
          
          #handle throttle and brake
          if linear_exp == 0.0 and linear_curr < 0.1: #we need to do a complete stop
-             brake = 400; 
+             brake = 700; 
              throttle = 0.0
              #print("complete stop: ", brake)
          elif throttle < 0.1 and vel_diff < 0.0: # we need to start braking slowly
              decel = max(self.decel_limit, vel_diff)
-             brake = (self.vehicle_mass+(self.fuel_capacity*GAS_DENSITY))*abs(decel)*self.wheel_radius #torque in Nm
+             brake = min(700, (self.vehicle_mass+(self.fuel_capacity*GAS_DENSITY))*abs(decel)*self.wheel_radius) #torque in Nm
              throttle = 0.0
              #print("rolling stop: ", brake)
 

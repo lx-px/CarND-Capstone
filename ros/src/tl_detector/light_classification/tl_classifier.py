@@ -8,8 +8,9 @@ class TLClassifier(object):
 
         if is_sim:
             PATH_TO_GRAPH = r'light_classification/models/frozen_inference_graph_sim_17668.pb'
+            #PATH_TO_GRAPH = r'light_classification/models/frozen_inference_graph_tf_1_9.pb'
         else:
-            PATH_TO_GRAPH = r'light_classification/models/frozen_inference_graph_real_17668.pb'
+            PATH_TO_GRAPH = r'light_classification/models/frozen_inference_graph_real_16103.pb'
 
         self.graph = tf.Graph()
         self.threshold = .5
@@ -31,13 +32,10 @@ class TLClassifier(object):
 
     def get_classification(self, image):
         """Determines the color of the traffic light in the image
-
         Args:
             image (cv::Mat): image containing the traffic light
-
         Returns:
             int: ID of traffic light color (specified in styx_msgs/TrafficLight)
-
         """
         with self.graph.as_default():
             img_expand = np.expand_dims(image, axis=0)
