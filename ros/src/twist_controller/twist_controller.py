@@ -29,11 +29,11 @@ class Controller(object):
         self.vel_filter = LowPassFilter(*self.vel_lp_coeff)
         self.steer_filter = LowPassFilter(*self.steer_lp_coeff)
         
-        #kp_cte = 0.5
-        #ki_cte = 0.0
-        #kd_cte = 0.2
-        #self.cte_controller = PID(
-        #    kp_cte, ki_cte, kd_cte, -self.max_steer_angle, self.max_steer_angle)
+        kp_cte = 0.5
+        ki_cte = 0.0
+        kd_cte = 0.2
+        self.cte_controller = PID(
+            kp_cte, ki_cte, kd_cte, -kwargs['max_steer_angle'], kwargs['max_steer_angle'])
         
         self.time = rospy.get_time()
 
@@ -65,16 +65,17 @@ class Controller(object):
          #smooth the noisy currrent velocity values
          linear_curr = self.vel_filter.filt(linear_curr) 
  
-         # get steer using yaw controller
-         steer = self.yaw_control.get_steering(linear_exp, angular_exp, linear_curr) #+ self.cte_controller.step(cte, sample_time)
-         steer = self.steer_filter.filt(steer)
- 
          #get appropriate vel. diff we need to achieve
          vel_diff = linear_exp - linear_curr
          #print(vel_diff, self.decel_limit*dt, self.accel_limit*dt)
          #vel_diff = max(self.decel_limit*dt, min(self.accel_limit*dt, vel_diff)) #max. vel achievable using out accel/decl limits
          #print(vel_diff)
  
+         # get steer using yaw controller
+         #print(linear_exp, linear_curr, angular_exp)
+         steer = self.yaw_control.get_steering(linear_exp, angular_exp, linear_curr) #+ self.cte_controller.step(vel_diff, dt)
+         steer = self.steer_filter.filt(steer)
+        
          #get throttle value using throttle pid controller: 0<val<1
          throttle = self.throttle_pid.step(vel_diff, dt)
          throttle = max(0.0, min(throttle, 1.0))

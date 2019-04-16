@@ -94,12 +94,29 @@ class WaypointUpdater(object):
         #print(self.stop_wp_idx, end_idx)
         if self.stop_wp_idx == -1 or self.stop_wp_idx > end_idx:
             #print(self.stop_wp_idx, end_idx)
-            lane.waypoints = base_waypoints
+            lane.waypoints = self.accelerate_waypoints(base_waypoints)# base_waypoints
         else:
-            print("decelerating...")
+            #print("decelerating...")
             lane.waypoints = self.decelerate_waypoints(base_waypoints, closest_idx)
         return lane
+    
+    def accelerate_waypoints(self, waypoints_front):
+        temp = []
         
+        
+        for i, wp in enumerate(waypoints_front):
+            p = Waypoint()
+            p.pose = wp.pose
+            #d = self.distance(waypoints_front, i, stop_idx)
+            #vel = 0.4*d#math.sqrt(2*-self.decel_limit*d)
+            #print(2*-self.decel_limit*d, vel)
+            #if vel < 2.0:
+            #    vel = 0.0
+            p.twist.twist.linear.x = 11.11#min(vel, wp.twist.twist.linear.x)
+            temp.append(p)
+            
+        return temp
+    
     def decelerate_waypoints(self, waypoints_front, closest_idx):
         temp = []
         
@@ -116,7 +133,7 @@ class WaypointUpdater(object):
                 vel = 0.0
             p.twist.twist.linear.x = min(vel, wp.twist.twist.linear.x)
             temp.append(p)
-            if i < stop_idx:
+            if i > stop_idx:
                 break
         return temp
 

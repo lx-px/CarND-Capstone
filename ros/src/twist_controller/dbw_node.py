@@ -56,7 +56,7 @@ class DBWNode(object):
         # TODO: Create `Controller` object
         throttle_pid_init = [0.3, 0.1, 0.0, 0.0, 0.2];
         vel_lp_coeff = [0.5, 0.02] 
-        steer_lp_coeff = [0.5, 0.5]
+        steer_lp_coeff = [0.5, 0.02]
         min_speed = 0.1
         self.max_vel = 40*0.44
         self.controller = Controller(vehicle_mass = vehicle_mass,
@@ -82,8 +82,6 @@ class DBWNode(object):
         self.twist = None
         self.currvel = None
         
-
-
         self.loop()
 
     def loop(self):

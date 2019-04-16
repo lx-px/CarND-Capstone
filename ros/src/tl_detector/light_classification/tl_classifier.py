@@ -56,13 +56,13 @@ class TLClassifier(object):
 
         if scores[0] > self.threshold:
             if classes[0] == 1:
-                print('GREEN')
+                #print('GREEN')
                 return TrafficLight.GREEN
             elif classes[0] == 2:
-                print('RED')
+                #print('RED')
                 return TrafficLight.RED
             elif classes[0] == 3:
-                print('YELLOW')
+                #print('YELLOW')
                 return TrafficLight.YELLOW
 
         return TrafficLight.UNKNOWN

@@ -14,7 +14,7 @@ from scipy.spatial import KDTree
 import numpy as np
 #import os
 
-STATE_COUNT_THRESHOLD = 2
+STATE_COUNT_THRESHOLD = 1
 
 class TLDetector(object):
     def __init__(self):
@@ -28,10 +28,10 @@ class TLDetector(object):
 
         self.waypoints_2d = None
         self.waypoint_tree = None
-        self.count = 0
+        #self.count = 0
         
         self.imCount = 0 #holds the current image count
-        self.imCountDrop=3 #holds the total images to drop
+        self.imCountDrop = 4 #holds the total images to drop
 
 
         sub1 = rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
@@ -53,7 +53,7 @@ class TLDetector(object):
         self.upcoming_red_light_pub = rospy.Publisher('/traffic_waypoint', Int32, queue_size=1)
 
         self.bridge = CvBridge()
-        self.light_classifier = TLClassifier(True)
+        self.light_classifier = TLClassifier(not self.config['is_site'])
         self.listener = tf.TransformListener()
 
         self.state = TrafficLight.UNKNOWN
@@ -199,7 +199,7 @@ class TLDetector(object):
             car_position = self.get_closest_waypoint(self.pose.pose.position.x, self.pose.pose.position.y)
 
             #TODO find the closest visible traffic light (if one exists)
-            max_d = 20#len(self.waypoints.waypoints)
+            max_d = 70#len(self.waypoints.waypoints)
             for i, light in enumerate(self.lights):
                 # get stop line coords.
                 line = stop_line_positions[i]
