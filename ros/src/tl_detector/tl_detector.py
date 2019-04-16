@@ -97,16 +97,8 @@ class TLDetector(object):
         self.imCount = 0
         self.has_image = True
         self.camera_image = msg
-        #print(len(msg.data), msg.height, msg.width, msg.)
-        #path = '~/work/imagedata'
-        #imgdata =  self.bridge.imgmsg_to_cv2(self.camera_image, "bgr8")
-        #cv2.imwrite(os.path.join('img'+str(self.count)+'.png'), imgdata)
-        #self.count += 1
-
+       
         light_wp, state = self.process_traffic_lights()
-        #print(light_wp, state)
-        #str = "lightinfo: %d"%state
-        #rospy.loginfo(str)
         '''
         Publish upcoming red lights at camera frequency.
         Each predicted state has to occur `STATE_COUNT_THRESHOLD` number
@@ -165,7 +157,6 @@ class TLDetector(object):
             int: ID of traffic light color (specified in styx_msgs/TrafficLight)
 
         """
-        #return light.state
         if(not self.has_image):
             self.prev_light_loc = None
             return False
@@ -174,10 +165,8 @@ class TLDetector(object):
 
         #Get classification
         light_det = self.light_classifier.get_classification(cv_image)
-        #light_det = 0
-        #print(light.state, light_det)
 
-        return light_det#light.state
+        return light_det
 
 
     def process_traffic_lights(self):
@@ -211,7 +200,7 @@ class TLDetector(object):
                     max_d = d
                     closest_light = light
                     line_wp_index = temp_wp_idx
-                    break
+                    #break
 
         if closest_light is not None:
             state = self.get_light_state(closest_light)

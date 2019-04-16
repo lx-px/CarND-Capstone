@@ -30,7 +30,7 @@ Once you have the proposed throttle, brake, and steer values, publish it on the 
 that we have created in the `__init__` function.
 
 '''
-RATE = 50
+RATE = 30
 class DBWNode(object):
     def __init__(self):
         rospy.init_node('dbw_node')
@@ -56,7 +56,7 @@ class DBWNode(object):
         # TODO: Create `Controller` object
         throttle_pid_init = [0.3, 0.1, 0.0, 0.0, 0.2];
         vel_lp_coeff = [0.5, 0.02] 
-        steer_lp_coeff = [0.5, 0.02]
+        steer_lp_coeff = [0.5, 0.5]
         min_speed = 0.1
         self.max_vel = 40*0.44
         self.controller = Controller(vehicle_mass = vehicle_mass,
