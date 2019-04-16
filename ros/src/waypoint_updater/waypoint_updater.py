@@ -94,7 +94,7 @@ class WaypointUpdater(object):
         #print(self.stop_wp_idx, end_idx)
         if self.stop_wp_idx == -1 or self.stop_wp_idx > end_idx:
             #print(self.stop_wp_idx, end_idx)
-            lane.waypoints = self.accelerate_waypoints(base_waypoints)# base_waypoints
+            lane.waypoints = base_waypoints#self.accelerate_waypoints(base_waypoints)# 
         else:
             #print("decelerating...")
             lane.waypoints = self.decelerate_waypoints(base_waypoints, closest_idx)
