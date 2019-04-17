@@ -14,7 +14,7 @@ from scipy.spatial import KDTree
 import numpy as np
 #import os
 
-STATE_COUNT_THRESHOLD = 1
+STATE_COUNT_THRESHOLD = 2
 
 class TLDetector(object):
     def __init__(self):
@@ -110,7 +110,7 @@ class TLDetector(object):
             self.state = state
         elif self.state_count >= STATE_COUNT_THRESHOLD:
             self.last_state = self.state
-            light_wp = light_wp if state == TrafficLight.RED else -1
+            light_wp = light_wp if (state == TrafficLight.RED or state == TrafficLight.YELLOW) else -1
             self.last_wp = light_wp
             self.upcoming_red_light_pub.publish(Int32(light_wp))
             
@@ -134,17 +134,6 @@ class TLDetector(object):
             closest_idx = self.waypoint_tree.query([x, y], 1)[1]
         return closest_idx
         
-        closest_coord = self.waypoints_2d[closest_idx]
-        prev_coord = self.waypoints_2d[closest_idx - 1]
-
-        cl_vect = np.array(closest_coord)
-        prev_vect = np.array(prev_coord)
-        curr_vect = np.array([x, y])
-
-        val = np.dot(cl_vect - prev_vect, curr_vect - cl_vect)
-        if val > 0:
-            return (closest_idx + 1) % len(self.waypoints_2d)
-        return closest_idx
 
 
     def get_light_state(self, light):

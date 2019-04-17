@@ -22,8 +22,8 @@ as well as to verify your TL classifier.
 TODO (for Yousuf and Aaron): Stopline location for each traffic light.
 '''
 
-LOOKAHEAD_WPS = 20#200  # Number of waypoints we will publish. You can change this number
-RATE = 10
+LOOKAHEAD_WPS = 50#200  # Number of waypoints we will publish. You can change this number
+RATE = 2
 
 
 class WaypointUpdater(object):
@@ -31,7 +31,7 @@ class WaypointUpdater(object):
         rospy.init_node('waypoint_updater')
 
         rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
-        rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
+        self.bw_sub = rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
 
         # TODO: Add a subscriber for /traffic_waypoint and /obstacle_waypoint below
         rospy.Subscriber('/traffic_waypoint', Int32, self.traffic_cb)
@@ -101,7 +101,10 @@ class WaypointUpdater(object):
             p = Waypoint()
             p.pose = wp.pose
             p.twist = wp.twist
-            p.twist.twist.linear.x = max(p.twist.twist.linear.x, 0.1)
+            p.twist.twist.linear.x = max(5, p.twist.twist.linear.x/1.375)#max(p.twist.twist.linear.x, 0.1)#
+            p.twist.twist.angular.x = 0
+            p.twist.twist.angular.y = 0
+            p.twist.twist.angular.z = 0
             temp.append(p)
             
         return temp
@@ -119,6 +122,7 @@ class WaypointUpdater(object):
             if vel < 2.0:
                 vel = 0.0
             p.twist.twist.linear.x = min(vel, wp.twist.twist.linear.x)
+            p.twist.twist.angular.z = 0
             temp.append(p)
             if i > stop_idx:
                 break
@@ -135,6 +139,7 @@ class WaypointUpdater(object):
             self.waypoints_2d = [[waypoint.pose.pose.position.x, waypoint.pose.pose.position.y] for waypoint in
                                  waypoints.waypoints]
             self.waypoint_tree = KDTree(self.waypoints_2d)
+            self.bw_sub.unregister()
             
 
     def traffic_cb(self, msg):

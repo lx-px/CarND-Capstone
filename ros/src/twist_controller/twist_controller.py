@@ -31,7 +31,7 @@ class Controller(object):
         
         self.time = rospy.get_time()
 
-    def control(self, linear_exp,angular_exp,linear_curr,dbwenb):#**kwargs):
+    def control(self, linear_exp,angular_exp,linear_curr,dbwenb):
         # TODO: Change the arg, kwarg list to suit your needsf
         
         if dbwenb == False:
@@ -54,8 +54,9 @@ class Controller(object):
         vel_diff = linear_exp - linear_curr
          
         # get steer using yaw controller
-        #print(linear_exp, linear_curr, angular_exp)
-        steer = self.yaw_control.get_steering(linear_exp, angular_exp, linear_curr) #+ self.cte_controller.step(vel_diff, dt)
+        angular_exp_m = max(-0.8,min(0.8, angular_exp))
+        print(linear_exp, linear_curr, angular_exp, angular_exp_m)
+        steer = self.yaw_control.get_steering(linear_exp, angular_exp_m, linear_curr)
         steer = self.steer_filter.filt(steer)
         
         #get throttle value using throttle pid controller: 0<val<1

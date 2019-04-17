@@ -13,7 +13,7 @@ class TLClassifier(object):
             PATH_TO_GRAPH = r'light_classification/models/frozen_inference_graph_real_16103.pb'
 
         self.graph = tf.Graph()
-        self.threshold = .5
+        self.threshold = .7
 
         with self.graph.as_default():
             od_graph_def = tf.GraphDef()
